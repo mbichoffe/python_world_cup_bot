@@ -12,35 +12,32 @@ app = Flask(__name__)
 
 load_dotenv(find_dotenv())
 
-TWILIO_ACCOUNT_SID = os.environ.get('TWILIO_ACCOUNT_SID')
-TWILIO_AUTH_TOKEN = os.environ.get("TWILIO_AUTH_TOKEN")
+TWILIO_ACCOUNT_SID = os.getenv('TWILIO_ACCOUNT_SID')
+TWILIO_AUTH_TOKEN = os.getenv("TWILIO_AUTH_TOKEN")
 CLIENT = Client(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN)
-MESSAGING_SERVICE_SID = os.environ.get("TWILIO_MESSAGING_SERVICE_SID")
+MESSAGING_SERVICE_SID = os.getenv("TWILIO_MESSAGING_SERVICE_SID")
 SUBSCRIBERS_DB = './subscribers.csv'
 
 
-@app.route('/subscribe/<phone_number>', methods=['GET', 'DELETE'])
-def subscribe(phone_number):
+@app.route('/subscribe', methods=['POST', 'DELETE'])
+def subscribe():
 
-    is_valid = verify(phone_number)
+    phone_number = request.get_json()["number"]
+    if request.method == 'POST':
+        if phone_number:
+            is_valid = verify(phone_number)
+            if is_valid:
+                # TODO: get number from verify formatted
+                add_subscriber(phone_number)
+                resp = send_message(phone_number, "Welcome to the World Cup live updates!")
+                if resp.status == "accepted":
+                    # Return status code 200, with empty body
+                    return jsonify({"message": "You are subscribed!"}), HTTPStatus.OK
+                else:
+                    return jsonify({"message": resp.msg}), HTTPStatus.BAD_REQUEST
 
-    if request.method == 'GET':
-        if is_valid:
-            # TODO: get number from verify formatted
-            add_subscriber(phone_number)
-            resp = send_message(phone_number, "Welcome to the World Cup live updates!")
+        return jsonify({"message":"invalid number"}), 400
 
-            if resp.status == "accepted":
-                # Return status code 200, with empty body
-                return "", HTTPStatus.OK
-            else:
-                return jsonify({"message": resp.msg}), HTTPStatus.BAD_REQUEST
-
-        return "invalid number", 400
-
-    else:
-        # TODO: add code for delete
-        pass
 
 
 @app.route('/updates', methods=['POST'])

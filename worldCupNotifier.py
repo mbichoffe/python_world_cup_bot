@@ -177,6 +177,7 @@ def get_player_alias(player_id):
 
 # REPL starts here
 
+
 resp = json.loads(get_url(url=f'https://api.fifa.com/api/v1/calendar/matches?idCompetition={ID_COMPETITION}&idSeason={ID_SEASON}&count=500&language={LOCALE}',
                do_not_use_etag=True))
 
