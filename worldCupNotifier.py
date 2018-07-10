@@ -13,7 +13,7 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(level
 logger = logging.getLogger(__name__)
 
 # CONSTANTS
-
+SLACK_CHANNEL="#test-slack-bot-fifa"
 PROXY = 'http://myproxy:3128'
 USE_PROXY = False
 PROXY_USERPWD = False
@@ -106,7 +106,7 @@ def save_to_json(file):
 
 
 def microtime(get_as_float=False):
-    """Return current Unix timestap in microseconds."""
+    """Return current Unix timestamp in microseconds."""
     if get_as_float:
         return time.time()
     else:
@@ -209,7 +209,8 @@ for match in matches:
             'last_update': microtime()
         }
         # send sms and save data
-        post_to_subscribers(f'{language[LOCALE][0]} {match["Home"]["TeamName"][0]["Description"]} vs. \
+        print("sending sms")
+        send_sms(f'{language[LOCALE][0]} {match["Home"]["TeamName"][0]["Description"]} vs. \
         {match["Away"]["TeamName"][0]["Description"]} {language[LOCALE][1]}!')
 
     if match["IdMatch"] in DB["live_matches"]:
@@ -324,9 +325,9 @@ for live_match in live_matches:
                     continue
 
                 if interesting_event:
-                    # print("INTERESTING EVENT!", response)
-                    post_to_subscribers(subject, details)
-                    print("POSTED", subject, details)
+                    print("INTERESTING EVENT!", response)
+                    send_sms(subject, details)
+                    post_to_slack(SLACK_CHANNEL, subject, details)
                     DB[live_match]['last_update'] = microtime()
                 if not DB["live_matches"]:
                     DB["live_matches"] = []
