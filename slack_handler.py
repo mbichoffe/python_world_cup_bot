@@ -1,5 +1,4 @@
 import os
-import ssl
 import time
 import requests
 from dotenv import load_dotenv, find_dotenv
@@ -8,12 +7,9 @@ from twilio.rest import Client
 
 load_dotenv(find_dotenv())
 
-ssl._create_default_https_context = ssl._create_unverified_context
 
 SLACK_BOT_TOKEN = os.getenv("SLACK_BOT_TOKEN")
-
 SLACK_BOT_ID = os.getenv("SLACK_BOT_ID")
-print("SLACK BOT ID", SLACK_BOT_ID)
 WORLD_CUP_SLACK_BOT_ID = os.getenv("SLACK_BOT_ID")
 
 # constants
@@ -49,16 +45,14 @@ def handle_command(command: str, channel: str):
     response = f'Not sure what you mean. To subscribe for SMS World Cup updates, use the *{BOT_COMMAND}* command ' \
                f'followed by your phone number (with area code), delimited by spaces. '
     if command.startswith(BOT_COMMAND):
-        print("calling response")
         response = add_subscriber(command[len(BOT_COMMAND):].strip())
-        print("response", response)
     post_to_slack(channel, response)
 
 
-def post_to_slack(channel, body=None):
-
+def post_to_slack(channel, body=None, attachment_text=None):
+    print("CHannel", channel)
     SLACK_CLIENT.api_call("chat.postMessage", channel=channel,
-                          text=body, as_user=True)
+                           text=body, attachments=[{"text": attachment_text}], as_user=True)
 
 
 def parse_slack_output(slack_rtm_output):
@@ -79,12 +73,10 @@ def parse_slack_output(slack_rtm_output):
 if __name__ == "__main__":
     READ_WEBSOCKET_DELAY = 1  # 1 second delay between reading from firehose
     if SLACK_CLIENT.rtm_connect():
-        print("CallBot connected and running!")
+        print("WorldCupBot connected and running!")
         while True:
-            # print("slack client", SLACK_CLIENT.rtm_read())
             command, channel = parse_slack_output(SLACK_CLIENT.rtm_read()) or (None, None)
             if command and channel:
-                # print("command,", command, "channel", channel)
                 handle_command(command, channel)
             time.sleep(READ_WEBSOCKET_DELAY)
     else:
