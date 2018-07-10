@@ -6,7 +6,7 @@ import math
 import logging
 from requests import Request, Session
 from datetime import datetime
-
+from slack_handler import post_to_slack
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 
@@ -19,7 +19,6 @@ USE_PROXY = False
 PROXY_USERPWD = False
 LOCALE = 'en-GB'
 os.environ['TZ'] = 'UTC'
-print(time.strftime('%Y-%m-%d %H:%M:%S'))
 time.tzset()
 
 language = {'en-GB': [
@@ -113,9 +112,8 @@ def microtime(get_as_float=False):
         return f'{x} {y}'
 
 
-#########
 def get_url(url, do_not_use_etag=False):
-    # set timeout
+
     proxies = dict()
     s = Session()
     req = Request('GET', url)
