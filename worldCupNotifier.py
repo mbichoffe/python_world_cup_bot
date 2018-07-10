@@ -162,7 +162,12 @@ def send_sms(text: str, attachment: str=None)->None:
                          json={'message': text})
 
     if resp.status_code != 200:
-        logger.info(resp)
+        print(resp)
+        # logger.info(resp)
+
+def get_all_matches():
+    # A Foolish Consistency is the Hobgoblin of Little Minds
+    return json.loads(get_url(f'{FIFA_API_URL}calendar/matches?idCompetition={ID_COMPETITION}&idSeason={ID_SEASON}&count=500&language={LOCALE}', True))
 
 
 def get_player_alias(player_id):
@@ -171,15 +176,14 @@ def get_player_alias(player_id):
     :param player_id: str
     :return:
     """
-    resp = json.loads(get_url(f'https://api.fifa.com/api/v1/players/{player_id}', False))
+    resp = json.loads(get_url(f'{FIFA_API_URL}players/{player_id}', False))
 
     return resp["Alias"][0]["Description"]
 
 # REPL starts here
+"CAlling resp \n\n\n\n"
 
-
-resp = json.loads(get_url(url=f'https://api.fifa.com/api/v1/calendar/matches?idCompetition={ID_COMPETITION}&idSeason={ID_SEASON}&count=500&language={LOCALE}',
-               do_not_use_etag=True))
+resp = get_all_matches()
 
 matches = {}
 
