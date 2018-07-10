@@ -86,7 +86,9 @@ PERIOD_1ST_ET = 7
 PERIOD_2ND_ET = 9
 PERIOD_PENALTY = 11
 
-# open DB file
+#URLS
+FIFA_API_URL = "https://api.fifa.com/api/v1/"
+
 DB_FILE = './worldCupDB.json'
 
 DB = json.loads(open(DB_FILE).read())
@@ -143,11 +145,11 @@ def get_url(url, do_not_use_etag=False):
             return False
         return content
     else:
-        # TODO replace with logger
         logger.log(resp.status_code, resp.content)
 
 
-def post_to_subscribers(text: str, attachment: str=None)->None:
+
+def send_sms(text: str, attachment: str=None)->None:
     """
 
     :param text: Match update
@@ -208,9 +210,10 @@ for match in matches:
 
     if match["IdMatch"] in DB["live_matches"]:
         # update score
-        DB[match["IdMatch"]]["score"] = f'{match["Home"]["TeamName"][0]["Description"]} {match["Home"]["Score"]} - {match["Away"]["Score"]} {match["Away"]["TeamName"][0]["Description"]}'
+
+        DB[match["IdMatch"]]["score"] = f'{match["Home"]["TeamName"][0]["Description"]} {match["Home"]["Score"]} - ' \
+                                        f'{match["Away"]["Score"]} {match["Away"]["TeamName"][0]["Description"]} '
     # save to file to avoid loops
-    # print("saving to DB", DB)
     save_to_json(DB)
 
 
@@ -218,14 +221,13 @@ live_matches = DB["live_matches"]
 for live_match in live_matches:
     # add ordered dict
     for key, value in DB[live_match].items():
-        print("KEY", key, "LIVE ID", live_match)
         home_team_name = DB[live_match]['teamsByHomeAway']["Home"]
         away_team_name = DB[live_match]['teamsByHomeAway']["Away"]
         last_update_secs = DB[live_match]["last_update"].split(" ")[1]
 
         # retrieve match events
         response = json.loads(get_url(
-            f'https://api.fifa.com/api/v1/timelines/{ID_COMPETITION}/{ID_SEASON}/{DB[live_match]["stage_id"]}/{live_match}?language={LOCALE}'))
+            f'{FIFA_API_URL}timelines/{ID_COMPETITION}/{ID_SEASON}/{DB[live_match]["stage_id"]}/{live_match}?language={LOCALE}'))
 
         # in case of 304
         if response is None:
@@ -234,7 +236,6 @@ for live_match in live_matches:
         for event in events:
             event_type = event["Type"]
             period = event["Period"]
-            print()
             event_timestamp = datetime.strptime(event["Timestamp"], "%Y-%m-%dT%H:%M:%S.%fZ")
             event_time_secs = time.mktime(event_timestamp.timetuple())
 
@@ -306,7 +307,7 @@ for live_match in live_matches:
 
                 elif event_type == EVENT_PENALTY_MISSED or event_type == EVENT_PENALTY_SAVED:
                     event_player_alias = get_player_alias(event["IdPlayer"])
-                    subject = f'{language[LOCALE][7]} {event_team}!!!'
+                    subject = f'{language_[LOCALE][7]} {event_team}!!!'
                     details = f'{event_player_alias} ({match_time})'
 
                 elif event_type == EVENT_END_OF_GAME:
