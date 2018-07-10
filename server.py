@@ -44,7 +44,7 @@ def subscribe():
 def send_updates():
     """
     Sends SMS to subscribers when an interesting event happens during a live match
-    :return: None if successful, JSON with message error if it fails to send message
+    :return: 200 if successful, JSON with message error if it fails to send message
     """
     message_body = request.get_json()['message']
     subscribers_list = get_subscribers()
@@ -53,7 +53,7 @@ def send_updates():
     if resp:
         return jsonify({"message": resp.msg}, status=HTTPStatus.BAD_REQUEST)
     else:
-        return '', 200
+        return '', HTTPStatus.OK
 
 # {'uri': '/Accounts/AC9ef0615fc878587fcd7a67aa97a03703/Messages.json', 'status': 400, 'msg': 'Unable to create record: A text message body or media urls must be specified.', 'code': 21619, 'method': 'POST'}
 
