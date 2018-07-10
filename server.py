@@ -6,7 +6,7 @@ from flask import jsonify
 from flask import request
 from http import HTTPStatus
 from twilio.rest import Client
-import json
+
 
 app = Flask(__name__)
 
@@ -55,7 +55,6 @@ def send_updates():
     else:
         return '', HTTPStatus.OK
 
-# {'uri': '/Accounts/AC9ef0615fc878587fcd7a67aa97a03703/Messages.json', 'status': 400, 'msg': 'Unable to create record: A text message body or media urls must be specified.', 'code': 21619, 'method': 'POST'}
 
 #### HELPER FUNCTIONS ####
 
@@ -93,13 +92,10 @@ def send_message(number:str, body:str=None)-> "twilio.rest.api.v2010.account.mes
 
 
 def send_group_message(numbers_list: list, body: str=None)->None or Exception:
-
-    # option: use functools.partial
     for number in numbers_list:
         try:
             message = send_message(number, body)
         except Exception as e:
-            print("\n\n\n\n", e.__dict__, "\n\n\n\n")
             return e
 
 
