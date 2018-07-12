@@ -6,7 +6,7 @@ load_dotenv(find_dotenv())
 
 BOT_NAME = "pythonworldcupbot"
 
-slack_client = SlackClient(os.environ.get('SLACK_BOT_TOKEN'))
+slack_client = SlackClient(os.getenv('SLACK_BOT_TOKEN'))
 
 
 if __name__ == "__main__":
