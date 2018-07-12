@@ -10,7 +10,6 @@ load_dotenv(find_dotenv())
 
 SLACK_BOT_TOKEN = os.getenv("SLACK_BOT_TOKEN")
 SLACK_BOT_ID = os.getenv("SLACK_BOT_ID")
-WORLD_CUP_SLACK_BOT_ID = os.getenv("SLACK_BOT_ID")
 
 # constants
 AT_BOT = f'<@{SLACK_BOT_ID}>'
@@ -50,7 +49,6 @@ def handle_command(command: str, channel: str):
 
 
 def post_to_slack(channel, body=None, attachment_text=None):
-    print("CHannel", channel)
     SLACK_CLIENT.api_call("chat.postMessage", channel=channel,
                            text=body, attachments=[{"text": attachment_text}], as_user=True)
 
