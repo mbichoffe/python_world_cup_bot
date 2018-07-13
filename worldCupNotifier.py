@@ -4,6 +4,7 @@ import json
 import requests
 import math
 import logging
+import dateutil.parser
 from requests import Request, Session
 from datetime import datetime
 from slack_handler import post_to_slack
@@ -92,7 +93,6 @@ FIFA_API_URL = "https://api.fifa.com/api/v1/"
 DB_FILE = './worldCupDB.json'
 
 DB = json.loads(open(DB_FILE).read())
-print("DB", DB)
 
 
 # clean etag once in a while
@@ -163,7 +163,7 @@ def send_sms(text: str, attachment: str=None)->None:
 
     if resp.status_code != 200:
         print(resp)
-        # logger.info(resp)
+
 
 def get_all_matches():
     # A Foolish Consistency is the Hobgoblin of Little Minds
@@ -202,14 +202,13 @@ for match in matches:
                 match["Home"]["IdTeam"]: match["Home"]["TeamName"][0]["Description"],
                 match["Away"]["IdTeam"]: match["Away"]["TeamName"][0]["Description"]
             },
-            'teamsByHomeAway': {
+            "teamsByHomeAway": {
                 'Home': match["Home"]["TeamName"][0]["Description"],
                 'Away': match["Away"]["TeamName"][0]["Description"]
             },
             'last_update': microtime()
         }
         # send sms and save data
-        print("sending sms")
         send_sms(f'{language[LOCALE][0]} {match["Home"]["TeamName"][0]["Description"]} vs. \
         {match["Away"]["TeamName"][0]["Description"]} {language[LOCALE][1]}!')
 
@@ -224,7 +223,6 @@ for match in matches:
 
 live_matches = DB["live_matches"]
 for live_match in live_matches:
-    # add ordered dict
     for key, value in DB[live_match].items():
         home_team_name = DB[live_match]['teamsByHomeAway']["Home"]
         away_team_name = DB[live_match]['teamsByHomeAway']["Away"]
@@ -241,7 +239,7 @@ for live_match in live_matches:
         for event in events:
             event_type = event["Type"]
             period = event["Period"]
-            event_timestamp = datetime.strptime(event["Timestamp"], "%Y-%m-%dT%H:%M:%S.%fZ")
+            event_timestamp = dateutil.parser.parse(event["Timestamp"])
             event_time_secs = time.mktime(event_timestamp.timetuple())
 
             if event_time_secs > float(last_update_secs):
@@ -282,7 +280,6 @@ for live_match in live_matches:
                         subject = f'{language[LOCALE][13]} {score} ({event["HomePenaltyGoals"]} - {event["AwayPenaltyGoals"]})'
                         details = match_time
 
-
                 elif event_type == EVENT_GOAL or event_type == EVENT_FREE_KICK_GOAL or event_type == EVENT_PENALTY_GOAL:
                     event_player_alias = get_player_alias(event["IdPlayer"])
                     subject = f'{language[LOCALE][6]} {event_team}!!!'
@@ -300,12 +297,10 @@ for live_match in live_matches:
                     subject = f'{language[LOCALE][2]} {event_team}'
                     details = f'{event_player_alias} ({match_time})'
 
-
                 elif event_type == EVENT_SECOND_YELLOW_CARD_RED or event_type == EVENT_STRAIGHT_RED:
                     event_player_alias = get_player_alias(event["IdPlayer"])
                     subject = f'{language[LOCALE][3]} {event_team}'
                     details = f'{event_player_alias} ({match_time})'
-
 
                 elif event_type == EVENT_FOUL_PENALTY:
                     subject = f'{language[LOCALE][5]} {event_other_team}!!!'
