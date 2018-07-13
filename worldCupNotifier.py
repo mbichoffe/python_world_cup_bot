@@ -224,6 +224,8 @@ for match in matches:
 live_matches = DB["live_matches"]
 for live_match in live_matches:
     for key, value in DB[live_match].items():
+        if not DB.get(live_match):
+            continue
         home_team_name = DB[live_match]['teamsByHomeAway']["Home"]
         away_team_name = DB[live_match]['teamsByHomeAway']["Away"]
         last_update_secs = DB[live_match]["last_update"].split(" ")[1]
@@ -245,11 +247,11 @@ for live_match in live_matches:
             if event_time_secs > float(last_update_secs):
                 match_time = event["MatchMinute"]
                 _teams_by_id = DB[live_match]['teamsById']
-                for key, value in _teams_by_id.items():
-                    if key == event["IdTeam"]:
-                        event_team = value
+                for key_, value_ in _teams_by_id.items():
+                    if key_ == event["IdTeam"]:
+                        event_team = value_
                     else:
-                        event_other_team = value
+                        event_other_team = value_
                 event_player_alias = None
                 score = f'{home_team_name} {event["HomeGoals"]} - {event["AwayGoals"]} {away_team_name}'
                 subject = ''
@@ -313,6 +315,7 @@ for live_match in live_matches:
                 elif event_type == EVENT_END_OF_GAME:
                     DB['live_matches'].remove(live_match)
                     del DB[live_match]
+                    save_to_json(DB)
                     interesting_event = False
 
                 else:
@@ -320,15 +323,15 @@ for live_match in live_matches:
                     continue
 
                 if interesting_event:
-                    print("INTERESTING EVENT!", response)
                     send_sms(subject, details)
                     post_to_slack(SLACK_CHANNEL, subject, details)
                     DB[live_match]['last_update'] = microtime()
+
                 if not DB["live_matches"]:
                     DB["live_matches"] = []
 
-# print("saving to db", DB)
 save_to_json(DB)
+exit(0)
 
 
 
